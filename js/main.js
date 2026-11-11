@@ -4,6 +4,7 @@ import { CARS, TRACKS, THEMES, RIVALS, LAPS } from './data.js';
 import { buildTrack, W } from './track.js';
 import { buildWorld, measure, Smoke } from './world.js';
 import { Car, collide } from './car.js';
+import { lapCheck as lapCount, rank, gridSlot } from './core/race.js';
 import { Sound } from './audio.js';
 
 const $ = id => document.getElementById(id);
@@ -91,8 +92,8 @@ function makeCars() {
   player.baseLane = 0; player.skill = 0.97;
   cars.push(player);
   cars.forEach((c, k) => {
-    const idx = M - 5 - k * 4;
-    c.place(track, idx, k % 2 ? -3.2 : 3.2);
+    const { idx, lateral } = gridSlot(M, k);
+    c.place(track, idx, lateral);
     c.total = idx - M; c.lapsDone = -1; c.lapStart = 0; c.finish = null; c.lapTimes = []; c.hit = 0;
     scene.add(c.obj);
   });
@@ -173,25 +174,23 @@ $('btnResume').addEventListener('click', togglePause);
 /* ---------- race ---------- */
 let lastCount = 4, tableT = 0;
 function lapCheck(c) {
-  const laps = Math.floor(c.total / track.M);
-  if (laps <= c.lapsDone) return;
-  c.lapsDone = laps;
-  if (laps >= 1) {
-    const lt = time - c.lapStart; c.lapTimes.push(lt);
-    if (c.isPlayer) {
-      const key = TRACKS[trackI].id + ':lap', best = parseFloat(store.get(key));
-      if (AUTO) { /* test runs never set records */ }
-      else if (isNaN(best) || lt < best) { store.set(key, lt.toFixed(3)); $('hBest').textContent = fmtTime(lt); say('Най-добра обиколка: ' + fmtTime(lt), 2.6); sound.beep(1320, 0.25, 0.15, 'sine'); }
-      else if (laps === LAPS - 1) say('Последна обиколка');
-      else if (laps < LAPS) say('Обиколка ' + fmtTime(lt));
-    }
+  const ev = lapCount(c, time, track.M, LAPS);
+  if (!ev) return;
+  if (c.isPlayer && ev === 'lap') {
+    const laps = c.lapsDone, lt = c.lapTimes[c.lapTimes.length - 1];
+    const key = TRACKS[trackI].id + ':lap', best = parseFloat(store.get(key));
+    if (AUTO) { /* test runs never set records */ }
+    else if (isNaN(best) || lt < best) { store.set(key, lt.toFixed(3)); $('hBest').textContent = fmtTime(lt); say('Най-добра обиколка: ' + fmtTime(lt), 2.6); sound.beep(1320, 0.25, 0.15, 'sine'); }
+    else if (laps === LAPS - 1) say('Последна обиколка');
+    else if (laps < LAPS) say('Обиколка ' + fmtTime(lt));
   }
-  c.lapStart = time;
-  if (laps >= LAPS && c.finish == null) { c.finish = time; if (c.isPlayer) finishRace(); }
+  if (c.isPlayer && ev === 'finish') {
+    const lt = c.lapTimes[c.lapTimes.length - 1], key = TRACKS[trackI].id + ':lap', best = parseFloat(store.get(key));
+    if (!AUTO && (isNaN(best) || lt < best)) store.set(key, lt.toFixed(3));
+    finishRace();
+  }
 }
-function ranking() {
-  order = cars.slice().sort((a, b) => (b.finish != null ? 1e7 - b.finish : b.total) - (a.finish != null ? 1e7 - a.finish : a.total));
-}
+function ranking() { order = rank(cars); }
 function finishRace() {
   state = 'done'; ranking();
   const place = order.indexOf(player) + 1;
@@ -234,8 +233,9 @@ function simulate(dt) {
   return pIn;
 }
 
+let frames = 0;
 function frame(now) {
-  requestAnimationFrame(frame);
+  requestAnimationFrame(frame); frames++;
   const dt = Math.min((now - last) / 1000, 0.05); last = now;
   if (state === 'loading') return;
   clock += dt;
@@ -324,7 +324,7 @@ loadAll().then(() => {
   setTrack(trackI);
   $('loading').hidden = true;
   showMenu();
-  window.__game = { get cars() { return cars; }, get player() { return player; }, get track() { return track; }, get state() { return state; }, get time() { return time; }, startRace };
+  window.__game = { get cars() { return cars; }, get player() { return player; }, get track() { return track; }, get state() { return state; }, get time() { return time; }, get frames() { return frames; }, quality: 'high', startRace, solo: startRace };
   requestAnimationFrame(frame);
 }).catch(err => {
   console.error(err);

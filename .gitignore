@@ -1,3 +1,8 @@
 .vercel
 _downloads/
 tools/
+node_modules/
+test/out/
+server/node_modules/
+server/.wrangler/
+.wrangler/

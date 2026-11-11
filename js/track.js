@@ -1,9 +1,7 @@
 import * as THREE from 'three';
 
-export const W = 7;          // half road width
-export const KERB = 1.3;     // kerb width
-export const RUN = 9;        // grass run-off before the wall
-export const LIM = W + RUN - 1.2; // how far a car centre may go
+import { trackGeometry, W, KERB, RUN, LIM } from './core/geo.js';
+export { W, KERB, RUN, LIM };
 
 function canvasTex(size, draw) {
   const c = document.createElement('canvas'); c.width = c.height = size;
@@ -14,32 +12,8 @@ function canvasTex(size, draw) {
 }
 
 export function buildTrack(def) {
-  const curve = new THREE.CatmullRomCurve3(def.pts.map(([x, z]) => new THREE.Vector3(x * 1.3, 0, z * 1.3)), true, 'centripetal');
-  curve.arcLengthDivisions = 4000;
-  const length = curve.getLength();
-  const M = Math.round(length / 2);
-  const ds = length / M;
-  const sp = curve.getSpacedPoints(M);
-  const px = new Float32Array(M), pz = new Float32Array(M), tx = new Float32Array(M), tz = new Float32Array(M);
-  const nx = new Float32Array(M), nz = new Float32Array(M), curv = new Float32Array(M);
-  const box = { minX: 1e9, maxX: -1e9, minZ: 1e9, maxZ: -1e9 };
-  for (let i = 0; i < M; i++) {
-    px[i] = sp[i].x; pz[i] = sp[i].z;
-    box.minX = Math.min(box.minX, px[i]); box.maxX = Math.max(box.maxX, px[i]);
-    box.minZ = Math.min(box.minZ, pz[i]); box.maxZ = Math.max(box.maxZ, pz[i]);
-  }
-  for (let i = 0; i < M; i++) {
-    const a = (i - 1 + M) % M, b = (i + 1) % M;
-    let dx = px[b] - px[a], dz = pz[b] - pz[a]; const l = Math.hypot(dx, dz) || 1;
-    tx[i] = dx / l; tz[i] = dz / l; nx[i] = -tz[i]; nz[i] = tx[i];
-  }
-  const raw = new Float32Array(M);
-  for (let i = 0; i < M; i++) {
-    const a = (i - 3 + M) % M, b = (i + 3) % M;
-    const cross = tx[a] * tz[b] - tz[a] * tx[b], dot = tx[a] * tx[b] + tz[a] * tz[b];
-    raw[i] = Math.abs(Math.atan2(cross, dot)) / (6 * ds);
-  }
-  for (let i = 0; i < M; i++) { let s = 0; for (let k = -4; k <= 4; k++) s += raw[(i + k + M) % M]; curv[i] = s / 9; }
+  const geo = trackGeometry(def);
+  const { M, ds, px, pz, nx, nz, tx, tz } = geo;
 
   const group = new THREE.Group();
 
@@ -96,22 +70,5 @@ export function buildTrack(def) {
   line.position.set(px[0], 0.09, pz[0]); line.rotation.y = Math.atan2(tx[0], tz[0]); line.receiveShadow = true;
   group.add(line);
 
-  function locate(x, z, hint) {
-    let best = 0, bd = 1e18;
-    if (hint === undefined || hint < 0) {
-      for (let i = 0; i < M; i++) { const d = (x - px[i]) ** 2 + (z - pz[i]) ** 2; if (d < bd) { bd = d; best = i; } }
-    } else {
-      for (let k = -30; k <= 30; k++) { const i = (hint + k + M) % M; const d = (x - px[i]) ** 2 + (z - pz[i]) ** 2; if (d < bd) { bd = d; best = i; } }
-    }
-    return best;
-  }
-  const lateral = (x, z, i) => (x - px[i]) * nx[i] + (z - pz[i]) * nz[i];
-  // Distance from any point to the centre line (coarse, for scenery placement).
-  function distance(x, z) {
-    let bd = 1e18;
-    for (let i = 0; i < M; i += 3) { const d = (x - px[i]) ** 2 + (z - pz[i]) ** 2; if (d < bd) bd = d; }
-    return Math.sqrt(bd);
-  }
-
-  return { def, M, ds, length, px, pz, tx, tz, nx, nz, curv, box, group, locate, lateral, distance };
+  return { ...geo, group };
 }

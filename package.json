@@ -1,0 +1,14 @@
+{
+  "name": "rali-rodopi",
+  "private": true,
+  "type": "module",
+  "description": "Рали Родопи: 3D рали в браузъра (статични файлове) + онлайн сървър в server/",
+  "scripts": {
+    "test": "node --test test/core.test.mjs",
+    "smoke": "node test/smoke.mjs",
+    "serve": "node test/serve.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.63.0"
+  }
+}
