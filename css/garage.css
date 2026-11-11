@@ -1,0 +1,112 @@
+/* Garage overlay (js/garage-ui.js). A side sheet on wide screens, a bottom sheet in portrait: the car stays in view.
+   Same poster look as style.css; the custom properties fall back to the same values if style.css is missing. */
+.gar {
+  --g-asphalt: var(--asphalt, #14161b); --g-chalk: var(--chalk, #f6f2e8); --g-muted: var(--muted, #b5b8c2);
+  --g-kerb: var(--kerb, #e23b2e); --g-amber: var(--amber, #ffb627); --g-line: var(--line, rgba(246, 242, 232, .16));
+  --g-display: var(--display, "Russo One", "Arial Black", Impact, sans-serif); --g-body: var(--body, "Golos Text", "Segoe UI", Roboto, Arial, sans-serif);
+  position: fixed; inset: 0; z-index: 8; display: flex; justify-content: flex-end; align-items: stretch;
+  color: var(--g-chalk); font-family: var(--g-body); font-size: 16px; line-height: 1.35;
+  background: linear-gradient(90deg, rgba(10, 11, 15, 0) 35%, rgba(10, 11, 15, .45));
+  animation: gar-in .22s ease-out;
+}
+.gar *, .gar *::before, .gar *::after { box-sizing: border-box; }
+@keyframes gar-in { from { opacity: 0; } }
+@keyframes gar-slide { from { transform: translateX(24px); } }
+@keyframes gar-rise { from { transform: translateY(24px); } }
+@media (prefers-reduced-motion: reduce) { .gar, .gar-sheet { animation: none !important; } }
+
+.gar-sheet {
+  width: min(460px, 50vw); height: 100%; display: flex; flex-direction: column; min-height: 0;
+  background: rgba(16, 18, 24, .9); border-left: 4px solid var(--g-kerb);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  padding: calc(14px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) 16px;
+  gap: 10px; animation: gar-slide .25s ease-out;
+}
+
+.gar-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.gar-title { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.gar .eyebrow { font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--g-amber); }
+.gar h2 { font-family: var(--g-display); font-weight: 400; font-size: clamp(1.25rem, 3.4vw, 1.9rem); line-height: 1; margin: 0; overflow-wrap: anywhere; }
+.gar-pts { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; line-height: 1; padding: 6px 10px; border: 1px solid var(--g-line); border-radius: 3px; background: rgba(246, 242, 232, .06); }
+.gar-pts b { font-family: var(--g-display); font-weight: 400; font-size: 1.6rem; color: var(--g-amber); font-variant-numeric: tabular-nums; }
+.gar-pts span { font-size: .72rem; color: var(--g-muted); text-transform: uppercase; letter-spacing: .12em; margin-top: 3px; }
+
+.gar-next { display: flex; flex-direction: column; gap: 5px; }
+.gar-next p { margin: 0; font-size: .88rem; color: var(--g-muted); }
+.gar-next b { color: var(--g-chalk); font-weight: 600; }
+.gar .bar { height: 6px; background: rgba(246, 242, 232, .15); border-radius: 2px; overflow: hidden; }
+.gar .bar span { display: block; height: 100%; background: var(--g-amber); }
+
+.gar button { font-family: var(--g-display); font-size: 1rem; color: var(--g-chalk); background: rgba(246, 242, 232, .08); border: 1px solid var(--g-line); border-radius: 3px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.gar button:hover { background: rgba(246, 242, 232, .16); }
+.gar button:focus-visible, .gar input:focus-visible { outline: 3px solid var(--g-amber); outline-offset: 2px; }
+
+.gar-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; border-bottom: 1px solid var(--g-line); padding-bottom: 6px; }
+.gar-tabs button { min-height: 44px; padding: 6px 4px; font-size: .86rem; line-height: 1.1; background: transparent; border-color: transparent; color: var(--g-muted); }
+.gar-tabs button[aria-selected="true"] { color: var(--g-chalk); background: rgba(246, 242, 232, .08); box-shadow: inset 0 -3px 0 var(--g-kerb); }
+
+.gar-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 2px 4px 4px 2px; margin: 0 -4px 0 -2px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+.gar-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.gar-item {
+  min-height: 64px; display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 10px; row-gap: 2px; align-items: center;
+  text-align: left; padding: 8px 10px; font-family: var(--g-body) !important; background: rgba(246, 242, 232, .05) !important;
+}
+.gar-item:hover { background: rgba(246, 242, 232, .12) !important; }
+.gar-item[aria-pressed="true"] { border-color: var(--g-amber); box-shadow: inset 0 -3px 0 var(--g-amber); background: rgba(40, 34, 18, .92) !important; }
+.gar-item.locked { cursor: not-allowed; }
+.gar-item.locked .gar-sw, .gar-item.locked .gar-nm { opacity: .45; filter: saturate(.5); }
+.gar-sw { grid-row: 1 / 3; width: 44px; height: 30px; border-radius: 3px; display: flex; align-items: center; justify-content: center; }
+.gar-nm { font-family: var(--g-display); font-size: .92rem; line-height: 1.1; overflow-wrap: break-word; min-width: 0; }
+.gar-st { font-size: .75rem; color: var(--g-muted); display: flex; align-items: center; gap: 4px; }
+.gar-st.gar-sel { color: var(--g-amber); font-weight: 600; }
+.gar-st.gar-lock { color: var(--g-muted); }
+
+.gar-paint { width: 30px; height: 30px; border-radius: 50%; justify-self: center; box-shadow: inset 0 0 0 2px rgba(246, 242, 232, .35), 0 1px 3px rgba(0, 0, 0, .5); }
+.gar-stock { background: conic-gradient(#e05a48 0 25%, #3fae7a 0 50%, #5f7fd0 0 75%, #ffbe4a 0); }
+.gar-plate { gap: 3px; font-family: var(--g-display); border: 2px solid rgba(20, 22, 27, .9); height: 24px; padding: 0 3px; }
+.gar-plate i { font-style: normal; font-size: .52rem; background: var(--g-kerb); color: var(--g-chalk); padding: 1px 2px; border-radius: 2px; }
+.gar-plate b { font-weight: 400; font-size: .9rem; }
+.gar-noplate { border: 2px dashed rgba(246, 242, 232, .35); color: var(--g-muted); background: transparent; }
+.gar-spoiler { color: var(--g-chalk); }
+.gar-spoiler svg { width: 46px; height: 24px; overflow: visible; }
+.gar-trail { height: 14px; border-radius: 7px; box-shadow: 0 0 8px rgba(255, 255, 255, .15); }
+
+.gar-num { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 6px 12px; margin-bottom: 12px; padding: 8px 10px; border: 1px solid var(--g-line); border-radius: 3px; background: rgba(246, 242, 232, .04); }
+.gar-num-l { grid-column: 1 / -1; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--g-amber); font-weight: 600; }
+.gar-num-c { display: flex; align-items: center; gap: 6px; }
+.gar-step { width: 44px; height: 44px; padding: 0; font-size: 1.4rem !important; line-height: 1; }
+.gar-num-v { min-width: 2.2ch; text-align: center; font-family: var(--g-display); font-size: 1.8rem; color: var(--g-chalk); font-variant-numeric: tabular-nums; }
+.gar-num input[type="range"] { width: 100%; min-width: 0; height: 44px; margin: 0; accent-color: var(--g-amber); cursor: pointer; touch-action: pan-x; }
+.gar-num-h { grid-column: 1 / -1; margin: 0; font-size: .8rem; color: var(--g-muted); }
+
+.gar-foot { display: flex; align-items: center; gap: 12px; padding-top: 8px; border-top: 1px solid var(--g-line); }
+.gar-done { min-height: 48px; padding: 10px 34px; flex: 0 0 auto; letter-spacing: .04em; text-transform: uppercase; background: var(--g-kerb) !important; border-color: var(--g-kerb) !important; font-size: 1.1rem !important; }
+.gar-done:hover { background: #f24f41 !important; }
+.gar-hint { font-size: .76rem; color: var(--g-muted); line-height: 1.3; }
+
+/* portrait (phone held upright): bottom sheet, the car stays in the top part of the screen */
+@media (max-aspect-ratio: 1/1) {
+  .gar { align-items: flex-end; justify-content: stretch; background: linear-gradient(180deg, rgba(10, 11, 15, 0) 30%, rgba(10, 11, 15, .45)); }
+  .gar-sheet { width: 100%; height: auto; max-height: 62%; border-left: 0; border-top: 4px solid var(--g-kerb); animation-name: gar-rise;
+    padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+  .gar-body { min-height: 150px; }
+  .gar-items { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+}
+
+/* short landscape (phone on its side): squeeze the chrome so the list keeps room */
+@media (max-height: 480px) and (min-aspect-ratio: 1/1) {
+  .gar-sheet { gap: 6px; padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); width: min(460px, 52vw); }
+  .gar .eyebrow { display: none; }
+  .gar h2 { font-size: 1.15rem; }
+  .gar-pts { flex-direction: row; align-items: baseline; gap: 6px; padding: 4px 8px; }
+  .gar-pts b { font-size: 1.2rem; }
+  .gar-pts span { margin: 0; }
+  .gar-next p { font-size: .8rem; }
+  .gar-tabs { padding-bottom: 4px; }
+  .gar-tabs button { font-size: .78rem; }
+  .gar-item { min-height: 54px; padding: 6px 8px; }
+  .gar-foot { padding-top: 6px; }
+  .gar-done { min-height: 44px; padding: 8px 24px; }
+  .gar-hint { display: none; }
+  .gar-num { grid-template-columns: auto 1fr; margin-bottom: 8px; padding: 6px 8px; }
+}

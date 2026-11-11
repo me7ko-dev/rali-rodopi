@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Рали Родопи</title>
 <meta name="theme-color" content="#c2410c">
-<meta name="description" content="Рали Родопи — 3D рали в браузъра: шест коли, три писти, три обиколки, нитро и дрифт.">
+<meta name="description" content="Рали Родопи — 3D рали в браузъра: онлайн състезания с хора, шест писти, шампионат, гараж, нитро и дрифт.">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -20,6 +20,7 @@
 </head>
 <body>
 <div id="stage"></div>
+<div id="labels" aria-hidden="true"></div>
 
 <div id="loading" class="veil">
   <div class="loadbox">
@@ -31,13 +32,61 @@
 
 <div id="menu" class="menu" hidden>
   <header>
-    <h1>Рали Родопи</h1>
-    <p>Шест коли, три писти, три обиколки. Тръгваш последен.</p>
+    <div class="head-row">
+      <h1>Рали Родопи</h1>
+      <div class="top-actions">
+        <button id="btnGarage" type="button">Гараж <span id="ptsBadge" class="badge">0 т.</span></button>
+        <button id="btnBoards" type="button">Класации</button>
+      </div>
+    </div>
+    <nav class="modes" role="tablist" aria-label="Начин на игра">
+      <button type="button" role="tab" data-mode="solo">Сам с ботове</button>
+      <button type="button" role="tab" data-mode="champ">Шампионат</button>
+      <button type="button" role="tab" data-mode="online">Онлайн</button>
+    </nav>
   </header>
-  <section class="pick">
+
+  <section id="paneSolo" class="pick">
     <h2>Писта</h2>
     <div id="trackList" class="row"></div>
   </section>
+
+  <section id="paneChamp" class="pane" hidden>
+    <h2>Шампионат</h2>
+    <p class="lead">Шестте писти подред срещу същите петима. Точки 10, 8, 6, 5, 4, 3 и още 2 за финал. Печели който събере най-много.</p>
+    <div id="champTable"></div>
+    <button id="btnChampNew" type="button" class="small" hidden>Започни отначало</button>
+  </section>
+
+  <section id="paneOnline" class="pane" hidden>
+    <div id="onAuth">
+      <h2>Онлайн с хора</h2>
+      <p class="lead">Профил само с име и парола. Без имейл, без чат. До 8 души в състезание.</p>
+      <form id="onForm" class="auth" autocomplete="on">
+        <label>Име <input id="onName" name="username" autocomplete="username" maxlength="16" required></label>
+        <label>Парола <input id="onPass" name="password" type="password" autocomplete="current-password" minlength="6" maxlength="64" required></label>
+        <div class="btns"><button type="submit" class="go">Влез</button><button id="btnReg" type="button">Нов профил</button></div>
+      </form>
+    </div>
+    <div id="onHome" hidden>
+      <p class="hello"><span id="onHello"></span><small id="onStats"></small></p>
+      <div class="online-actions">
+        <button id="btnQuick" type="button" class="go">Бързо състезание</button>
+        <form id="codeForm" class="inline">
+          <input id="roomCode" placeholder="Код" maxlength="6" autocapitalize="characters" autocomplete="off" aria-label="Код на стая" spellcheck="false">
+          <button type="submit">Влез с код</button>
+        </form>
+        <div class="inline">
+          <select id="roomTrack" aria-label="Писта за стаята"></select>
+          <select id="roomLaps" aria-label="Обиколки"><option value="1">1 обиколка</option><option value="2">2 обиколки</option><option value="3" selected>3 обиколки</option><option value="5">5 обиколки</option></select>
+          <button id="btnCreate" type="button">Стая за приятели</button>
+        </div>
+      </div>
+      <div class="btns small-row"><button id="btnLogout" type="button" class="small">Изход</button><button id="btnDelete" type="button" class="small ghost">Изтрий профила</button></div>
+    </div>
+    <p id="onStatus" class="status" role="status"></p>
+  </section>
+
   <section class="pick">
     <h2>Кола</h2>
     <div id="carList" class="row"></div>
@@ -45,7 +94,30 @@
   <footer>
     <button id="btnGo" type="button" class="go">Старт</button>
     <p class="keys">Стрелки или W A S D: газ, спирачка, завой. Интервал: ръчна спирачка за дрифт. Shift: нитро. R: връщане на пистата. P: пауза.</p>
+    <button id="btnQuality" type="button" class="small ghost">Качество: авто</button>
   </footer>
+</div>
+
+<div id="lobby" class="veil" hidden>
+  <div class="card">
+    <span class="eyebrow" id="lbTrack"></span>
+    <h2 id="lbTitle">Бързо състезание</h2>
+    <p id="lbCode" class="code" hidden>Код: <b id="lbCodeVal"></b> <button id="lbCopy" type="button" class="small">Копирай</button></p>
+    <ol id="lbList" class="players"></ol>
+    <p id="lbNote" role="status"></p>
+    <div class="btns"><button id="lbStart" type="button" class="go" hidden>Старт</button><button id="lbLeave" type="button">Излез</button></div>
+  </div>
+</div>
+
+<div id="boards" class="veil" hidden>
+  <div class="card wide">
+    <span class="eyebrow">Онлайн</span>
+    <h2>Класации</h2>
+    <div id="bdTabs" class="tabs" role="tablist" aria-label="Класация"></div>
+    <table id="bdList"></table>
+    <p id="bdMe" class="mine"></p>
+    <div class="btns"><button id="bdClose" type="button">Затвори</button></div>
+  </div>
 </div>
 
 <div id="hud" hidden>
@@ -54,8 +126,10 @@
     <div class="lap">Обиколка <b id="hLap">1</b>/<span id="hLaps">3</span></div>
     <div class="time" id="hTime">0:00,00</div>
     <div class="best">Най-добра: <span id="hBest">—</span></div>
+    <ol id="hBoard" class="board"></ol>
   </div>
   <canvas id="map" width="340" height="340"></canvas>
+  <span id="hNet" class="net" hidden></span>
   <div class="br">
     <div class="speed"><b id="hSpd">0</b><span>км/ч</span></div>
     <div class="nitro"><small>Нитро</small><div class="bar"><span id="hNitro"></span></div></div>
@@ -63,14 +137,15 @@
   <div id="msg"></div>
   <div id="count"></div>
   <div id="touch" hidden>
-    <div class="grp"><button data-k="left" type="button" aria-label="Наляво">◀</button><button data-k="right" type="button" aria-label="Надясно">▶</button></div>
-    <div class="grp"><button data-k="nitro" type="button">N₂O</button><button data-k="hand" type="button">Дрифт</button><button data-k="brake" type="button">Стоп</button></div>
+    <div class="grp steer"><button data-k="left" type="button" aria-label="Наляво">◀</button><button data-k="right" type="button" aria-label="Надясно">▶</button></div>
+    <div class="grp act"><button id="touchReset" type="button" class="mini" aria-label="Върни на пистата">↺</button><button data-k="brake" type="button">Стоп</button><button data-k="hand" type="button">Дрифт</button><button data-k="nitro" type="button" class="n2o">N₂O</button></div>
   </div>
 </div>
 
 <div id="pause" class="veil" hidden>
   <div class="card">
     <h2>Пауза</h2>
+    <p id="pauseNote" hidden>Онлайн другите карат — колата ти стои.</p>
     <div class="btns"><button id="btnResume" type="button" class="go">Продължи</button><button id="btnQuit" type="button">Към менюто</button></div>
   </div>
 </div>

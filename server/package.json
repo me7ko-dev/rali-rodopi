@@ -1,0 +1,17 @@
+{
+  "name": "rali-rodopi-api",
+  "private": true,
+  "type": "module",
+  "description": "Рали Родопи — онлайн сървър (Cloudflare Worker + Durable Objects + D1)",
+  "scripts": {
+    "dev": "wrangler dev --port 8798 --local --var DEV_FORWARDED:1",
+    "check": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "schema:local": "wrangler d1 execute rali-rodopi --local --file schema.sql",
+    "schema:remote": "wrangler d1 execute rali-rodopi --remote --file schema.sql"
+  },
+  "devDependencies": {
+    "typescript": "5.9",
+    "wrangler": "4.153.0"
+  }
+}

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 import { trackGeometry, W, KERB, RUN, LIM } from './core/geo.js';
+import { THEMES } from './data.js';
 export { W, KERB, RUN, LIM };
 
 function canvasTex(size, draw) {
@@ -50,7 +51,12 @@ export function buildTrack(def) {
   });
   roadTex.wrapT = THREE.RepeatWrapping;
   const flat = { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, side: THREE.DoubleSide };
-  const road = new THREE.Mesh(ribbon(-W, 0.06, W, 0.06, null, 12), new THREE.MeshLambertMaterial({ map: roadTex, ...flat }));
+  // themes may tint the asphalt or make it wet (shiny); the first three tracks keep the plain material
+  const look = (THEMES[def.theme] || {}).road;
+  const roadMat = !look ? new THREE.MeshLambertMaterial({ map: roadTex, ...flat })
+    : look.wet ? new THREE.MeshPhongMaterial({ map: roadTex, color: look.color, specular: 0x8a929c, shininess: look.shine || 60, ...flat })
+    : new THREE.MeshLambertMaterial({ map: roadTex, color: look.color, ...flat });
+  const road = new THREE.Mesh(ribbon(-W, 0.06, W, 0.06, null, 12), roadMat);
   road.receiveShadow = true; group.add(road);
 
   const kerbCol = i => (Math.floor(i / 2) % 2 ? 0xd9362b : 0xf2efe6);

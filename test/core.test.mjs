@@ -166,3 +166,13 @@ test('referee: teleporting ahead gives no progress; skipping checkpoints is flag
 test('max speed allows nitro and bumps', () => {
   for (const s of PLAYABLE) assert.ok(maxSpeed(s) > s.top * 1.2);
 });
+
+test('smoother: interpolates between snapshots, extrapolates a little, no jump on late data', async () => {
+  const { Smoother } = await import('../js/core/smooth.js');
+  const s = new Smoother(), o = {};
+  s.push(0, 0, 0, 0, 10, 0); s.push(100, 0, 1, 0, 10, 1); s.push(200, 0, 2, 0, 10, 2);
+  s.sample(150, o); assert.ok(Math.abs(o.z - 1.5) < 1e-9);
+  s.sample(300, o); assert.ok(Math.abs(o.z - 3) < 1e-9, 'extrapolates with speed and heading: ' + o.z);
+  s.sample(5000, o); assert.ok(o.z <= 5 + 1e-9, 'but at most 300 ms');
+  s.push(150, 9, 9, 0, 0, 0); s.sample(150, o); assert.ok(Math.abs(o.z - 1.5) < 1e-9, 'old snapshot ignored');
+});

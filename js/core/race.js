@@ -69,13 +69,14 @@ export class Referee {
     this.lapsDone = -1; this.lapStart = 0; this.lapTimes = []; this.finish = null;
     this.lastK = null; this.lastT = null;
     this.flags = new Set();
-    this.window = []; // [serverTime, total] for the 2 s distance check
+    this.window = []; // [car clock, total] for the 2 s distance check
   }
   get valid() { return this.flags.size === 0; }
-  flag(why) { this.flags.add(why); }
+  flag(why, info = '') { if (!this.flags.size) this.detail = why + (info ? ' ' + info : '') + ' @' + (this.lastK ?? 0).toFixed(2); this.flags.add(why); }
 
   /**
-   * One reported position. now = server time in seconds since the start, k = the car's own race clock.
+   * One reported position. now = server time in seconds since the start, k = the car's own race clock
+   * (lap times use k, so network hiccups do not change them).
    * Returns 'lap' | 'finish' | null.
    */
   feed(x, z, k, now) {
@@ -83,7 +84,7 @@ export class Referee {
     if (!Number.isFinite(x) || !Number.isFinite(z) || !Number.isFinite(k)) { this.flag('data'); return null; }
     if (this.finish != null) return null;
     // the car's clock may not run ahead of ours (plus network slack), and may not go back
-    if (k > now + 2) this.flag('clock');
+    if (k > now + 2) this.flag('clock', `${k.toFixed(2)}>${now.toFixed(2)}`);
     if (this.lastK != null && k < this.lastK - 0.001) this.flag('clock');
     let idx = g.locate(x, z, this.idx, 40);
     const off = Math.abs(g.lateral(x, z, idx));
@@ -104,33 +105,33 @@ export class Referee {
     // speed between two reports, by the car's own clock (along the track, so a reset to the centre is fine)
     if (this.lastK != null && step > 0) {
       const dk = Math.max(k - this.lastK, 1 / 60);
-      if (step * g.ds > this.vmax * dk + 6) this.flag('speed');
+      if (step * g.ds > this.vmax * dk + 6) this.flag('speed', `${(step * g.ds).toFixed(1)}m/${dk.toFixed(3)}s`);
     }
     this.idx = idx; this.x = x; this.z = z; this.total += step; this.lastK = k; this.lastT = now;
-    // distance over the last 2 s of our own clock (catches a fast clock too)
-    this.window.push([now, this.total]);
-    while (this.window.length > 2 && now - this.window[0][0] > 2) this.window.shift();
-    const [t0, p0] = this.window[0];
-    if (now - t0 > 0.5 && (this.total - p0) * g.ds > this.vmax * (now - t0) + 12) this.flag('speed');
+    // distance over the last 2 s of the car's clock: many small steps just under the per-report slack add up here
+    this.window.push([k, this.total]);
+    while (this.window.length > 2 && k - this.window[0][0] > 2) this.window.shift();
+    const [k0, p0] = this.window[0];
+    if (k - k0 > 0.5 && (this.total - p0) * g.ds > this.vmax * (k - k0) + 12) this.flag('speed', `${((this.total - p0) * g.ds).toFixed(1)}m/${(k - k0).toFixed(2)}s`);
     // checkpoints strictly in order
     const cp = Math.floor(this.total / (g.M / CHECKPOINTS));
     if (cp > this.cp + 1) this.flag('checkpoint');
     if (cp > this.cp) this.cp = cp;
-    // laps on our clock
+    // laps on the car's clock (it cannot run ahead of ours, and a slow clock shows up as too much speed above)
     const done = Math.floor(this.total / g.M);
     if (done <= this.lapsDone) return null;
     this.lapsDone = done;
     let ev = null;
     if (done >= 1) {
-      const lt = now - this.lapStart;
+      const lt = k - this.lapStart;
       this.lapTimes.push(lt);
       if (lt < this.minLap) this.flag('laptime');
       ev = 'lap';
     }
-    this.lapStart = now;
+    this.lapStart = k;
     if (done >= this.laps) {
-      this.finish = now; ev = 'finish';
-      if (now < this.minLap * this.laps) this.flag('laptime');
+      this.finish = k; ev = 'finish';
+      if (k < this.minLap * this.laps) this.flag('laptime');
     }
     return ev;
   }

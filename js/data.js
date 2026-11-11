@@ -28,6 +28,26 @@ export const THEMES = {
     zen: 0x151e4c, hor: 0x7a74b4, sunDir: [0.3, 0.42, -0.8], sunCol: 0xbcc4ff, sun: 2.0,
     hemiSky: 0x99a4ff, hemiGround: 0x20263f, hemi: 1.2,
     grass: 0x41805e, forest: 0x215044, rock: 0x747c93, sand: 0x9c9ca4, water: 0x25437d, fog: [160, 900]
+  },
+  // The themes below also use: weather ('snow' | 'rain'), night (headlights, moonlight), stars, lamps (a street lamp
+  // every N track samples), treeTint ([colour, amount]) and road ({ color, wet, shine } for js/track.js).
+  snow: {
+    zen: 0x7f98b8, hor: 0xdce4ec, sunDir: [0.35, 0.62, -0.55], sunCol: 0xfff6ea, sun: 1.7,
+    hemiSky: 0xeef4ff, hemiGround: 0xa7b3c2, hemi: 1.15,
+    grass: 0xe6edf3, forest: 0xc9d5de, rock: 0x8b929c, sand: 0xc4ccd4, water: 0x9bb8cf, fog: [120, 820],
+    weather: 'snow', treeTint: [0xeef3f7, 0.62], road: { color: 0xd6dce4 }
+  },
+  night: {
+    zen: 0x03060f, hor: 0x1a2440, sunDir: [-0.45, 0.55, 0.62], sunCol: 0x9fb4ff, sun: 0.6,
+    hemiSky: 0x7084bd, hemiGround: 0x232a3e, hemi: 1.35,
+    grass: 0x3a5c40, forest: 0x1d3a2a, rock: 0x5c6270, sand: 0x7a7a80, water: 0x18284a, fog: [70, 520],
+    night: true, stars: true, lamps: 24, road: { color: 0xe6e8f0 }
+  },
+  rain: {
+    zen: 0x4c5865, hor: 0x8b96a0, sunDir: [0.25, 0.42, 0.87], sunCol: 0xb4bcc4, sun: 1.0,
+    hemiSky: 0xc6d0da, hemiGround: 0x3e4a3c, hemi: 1.5,
+    grass: 0x4f7a42, forest: 0x2b4f36, rock: 0x6f7780, sand: 0x9a957f, water: 0x45606f, fog: [28, 330],
+    weather: 'rain', road: { color: 0x9da3ab, wet: true, shine: 40 }
   }
 };
 
@@ -43,5 +63,18 @@ export const TRACKS = [
   {
     id: 'sarnitsa', name: 'Сърница', sub: 'Привечер, дълъг и бърз', theme: 'dusk',
     pts: [[0, 0], [200, -20], [340, 60], [360, 200], [260, 280], [140, 240], [60, 300], [80, 420], [-40, 480], [-160, 420], [-140, 300], [-240, 220], [-260, 80], [-140, 20]]
+  },
+  // New tracks go after the first three: their ids and points are used by the online server and the records.
+  {
+    id: 'perelik', name: 'Перелик', sub: 'Сняг, хлъзгави серпентини', theme: 'snow', grip: 0.85,
+    pts: [[0, 0], [170, 0], [250, 20], [270, 70], [220, 110], [110, 100], [10, 120], [-30, 175], [30, 220], [150, 210], [260, 230], [290, 290], [230, 340], [100, 335], [-30, 345], [-140, 320], [-200, 240], [-190, 140], [-190, 50], [-110, 0]]
+  },
+  {
+    id: 'beglika', name: 'Беглика', sub: 'Нощ, на фарове и фенери', theme: 'night',
+    pts: [[0, 0], [150, 0], [300, -20], [420, -60], [520, -20], [540, 80], [460, 140], [340, 120], [220, 160], [100, 130], [-20, 170], [-140, 150], [-220, 90], [-200, 0], [-110, -10]]
+  },
+  {
+    id: 'shiroka-polyana', name: 'Широка поляна', sub: 'Дъжд и мъгла, мокър асфалт', theme: 'rain', grip: 0.88,
+    pts: [[0, 0], [220, 10], [380, -40], [480, 40], [460, 180], [340, 230], [300, 330], [180, 380], [40, 330], [-80, 380], [-200, 320], [-230, 190], [-160, 110], [-190, 30], [-110, -10]]
   }
 ];

@@ -4,9 +4,11 @@
   "type": "module",
   "description": "Рали Родопи: 3D рали в браузъра (статични файлове) + онлайн сървър в server/",
   "scripts": {
-    "test": "node --test test/core.test.mjs",
+    "test": "node --test test/core.test.mjs test/tracks.test.mjs test/garage.test.mjs",
     "smoke": "node test/smoke.mjs",
-    "serve": "node test/serve.mjs"
+    "serve": "node test/serve.mjs",
+    "test:online": "node test/online.mjs",
+    "test:online-ui": "node test/online-ui.mjs"
   },
   "devDependencies": {
     "playwright-core": "1.63.0"

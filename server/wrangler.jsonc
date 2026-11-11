@@ -1,0 +1,19 @@
+// Рали Родопи — онлайн сървър (Cloudflare Worker + Durable Objects + D1).
+// Локално:  npm run dev   (в папка server/; после npm run schema:local веднъж)
+// Онлайн:   npm run deploy   (схемата: npm run schema:remote — само добавя, никога не трие)
+{
+  "name": "rali-rodopi-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "observability": { "enabled": true },
+  // собствен поддомейн; адресът workers_dev е изключен
+  "routes": [{ "pattern": "rali-api.metko.uk", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false,
+  // стаите за състезания (по една на състезание) и лобито, което събира хората
+  "durable_objects": { "bindings": [ { "name": "ROOMS", "class_name": "RaceRoom" }, { "name": "LOBBY", "class_name": "Lobby" } ] },
+  "migrations": [ { "tag": "v1", "new_sqlite_classes": ["RaceRoom", "Lobby"] } ],
+  "d1_databases": [
+    { "binding": "DB", "database_name": "rali-rodopi", "database_id": "bf4b41fd-1ab6-4f65-a41f-ddf8df9c0bcb" }
+  ]
+}
