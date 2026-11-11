@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Рали Родопи</title>
+<meta name="theme-color" content="#c2410c">
+<meta name="description" content="Рали Родопи — 3D рали в браузъра: шест коли, три писти, три обиколки, нитро и дрифт.">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Golos+Text:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="stage"></div>
+
+<div id="loading" class="veil">
+  <div class="loadbox">
+    <h1>Рали Родопи</h1>
+    <div class="bar"><span id="loadBar"></span></div>
+    <p id="loadText">Зареждане на колите…</p>
+  </div>
+</div>
+
+<div id="menu" class="menu" hidden>
+  <header>
+    <h1>Рали Родопи</h1>
+    <p>Шест коли, три писти, три обиколки. Тръгваш последен.</p>
+  </header>
+  <section class="pick">
+    <h2>Писта</h2>
+    <div id="trackList" class="row"></div>
+  </section>
+  <section class="pick">
+    <h2>Кола</h2>
+    <div id="carList" class="row"></div>
+  </section>
+  <footer>
+    <button id="btnGo" type="button" class="go">Старт</button>
+    <p class="keys">Стрелки или W A S D: газ, спирачка, завой. Интервал: ръчна спирачка за дрифт. Shift: нитро. R: връщане на пистата. P: пауза.</p>
+  </footer>
+</div>
+
+<div id="hud" hidden>
+  <div class="tl">
+    <div class="pos"><b id="hPos">6</b><span>/<i id="hOf">6</i></span></div>
+    <div class="lap">Обиколка <b id="hLap">1</b>/<span id="hLaps">3</span></div>
+    <div class="time" id="hTime">0:00,00</div>
+    <div class="best">Най-добра: <span id="hBest">—</span></div>
+  </div>
+  <canvas id="map" width="340" height="340"></canvas>
+  <div class="br">
+    <div class="speed"><b id="hSpd">0</b><span>км/ч</span></div>
+    <div class="nitro"><small>Нитро</small><div class="bar"><span id="hNitro"></span></div></div>
+  </div>
+  <div id="msg"></div>
+  <div id="count"></div>
+  <div id="touch" hidden>
+    <div class="grp"><button data-k="left" type="button" aria-label="Наляво">◀</button><button data-k="right" type="button" aria-label="Надясно">▶</button></div>
+    <div class="grp"><button data-k="nitro" type="button">N₂O</button><button data-k="hand" type="button">Дрифт</button><button data-k="brake" type="button">Стоп</button></div>
+  </div>
+</div>
+
+<div id="pause" class="veil" hidden>
+  <div class="card">
+    <h2>Пауза</h2>
+    <div class="btns"><button id="btnResume" type="button" class="go">Продължи</button><button id="btnQuit" type="button">Към менюто</button></div>
+  </div>
+</div>
+
+<div id="finish" class="veil" hidden>
+  <div class="card">
+    <span class="eyebrow" id="fTrack"></span>
+    <h2 id="fTitle">Финал</h2>
+    <table id="fTable"></table>
+    <p id="fNote"></p>
+    <div class="btns"><button id="btnAgain" type="button" class="go">Още веднъж</button><button id="btnMenu" type="button">Към менюто</button></div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
